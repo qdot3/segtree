@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "compress"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#171ec9e3521920ce301143700cdd25477e0989e2"
+source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
 
 [[package]]
 name = "foldable_deque"
@@ -30,12 +30,12 @@ dependencies = [
 [[package]]
 name = "from_bytes"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#171ec9e3521920ce301143700cdd25477e0989e2"
+source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
 
 [[package]]
 name = "input"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#171ec9e3521920ce301143700cdd25477e0989e2"
+source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
 dependencies = [
  "from_bytes",
 ]
@@ -71,7 +71,7 @@ dependencies = [
 [[package]]
 name = "output"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#171ec9e3521920ce301143700cdd25477e0989e2"
+source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
 
 [[package]]
 name = "segtree"
