@@ -8,16 +8,16 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-segtree = { git = "https://github.com/qdot3/segtree" }
-segtree_dual = { git = "https://github.com/qdot3/segtree" }
-segtree_lazy = { git = "https://github.com/qdot3/segtree" }
-segtree_traits = { git = "https://github.com/qdot3/segtree", package = "traits"}
+segtree = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+segtree_dual = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+segtree_lazy = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+segtree_traits = { git = "https://github.com/qdot3/segtree", package = "traits", version="0.1.0" }
 
-op_add = { git = "https://github.com/qdot3/segtree" }
-op_min = { git = "https://github.com/qdot3/segtree" }
-op_max = { git = "https://github.com/qdot3/segtree" }
-op_affine = { git = "https://github.com/qdot3/segtree" }
+op_add = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+op_min = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+op_max = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
+op_affine = { git = "https://github.com/qdot3/segtree", version="0.1.0" }
 
-foldable_queue = { git = "https://github.com/qdot3/segtree" }
-foldable_deque = { git = "https://github.com/qdot3/segtree" }
+foldable_queue = { git = "https://github.com/qdot3/segtree", version="0.2.0" }
+foldable_deque = { git = "https://github.com/qdot3/segtree", version="0.2.0" }
 ```
