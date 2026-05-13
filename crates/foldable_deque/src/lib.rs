@@ -37,6 +37,27 @@ where
         self.tail.reserve(additional);
     }
 
+    /// Returns the number of elements in the deque.
+    pub fn len(&self) -> usize {
+        if std::mem::size_of::<T::Set>() == 0 {
+            // FIXME
+            unimplemented!("bug in FoldableQueue::len()")
+        } else {
+            self.head.len() + self.tail.len()
+        }
+    }
+
+    /// Returns `true` if the deque contains no elements.
+    pub fn is_empty(&self) -> bool {
+        self.head.is_empty() && self.tail.is_empty()
+    }
+
+    /// Clear the deque.
+    pub fn clear(&mut self) {
+        self.head.clear();
+        self.tail.clear();
+    }
+
     /// Appends an element to the front of the deque.
     ///
     /// # Time complexity

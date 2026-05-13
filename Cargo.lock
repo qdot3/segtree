@@ -9,7 +9,7 @@ source = "git+https://github.com/qdot3/lib-cp#171ec9e3521920ce301143700cdd25477e
 
 [[package]]
 name = "foldable_deque"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "from_bytes",
  "input",
@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "foldable_queue"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "from_bytes",
  "input",
