@@ -1,0 +1,10 @@
+[package]
+name = "op_max"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+traits = { path = "../traits" }
+
+[lints]
+workspace = true

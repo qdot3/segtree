@@ -1,0 +1,26 @@
+[workspace.package]
+edition = "2021"
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/foldable_deque",
+    "crates/foldable_queue",
+    "crates/op_add",
+    "crates/op_affine",
+    "crates/op_max",
+    "crates/op_min",
+    "crates/segtree",
+    "crates/segtree_dual",
+    "crates/segtree_lazy",
+    "crates/traits",
+]
+
+[workspace.dependencies]
+from_bytes = { git = "https://github.com/qdot3/lib-cp" }
+input = { git = "https://github.com/qdot3/lib-cp" }
+output = { git = "https://github.com/qdot3/lib-cp" }
+compress = { git = "https://github.com/qdot3/lib-cp" }
+
+[workspace.lints]
+clippy.pedantic = "warn"

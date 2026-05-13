@@ -1,0 +1,16 @@
+[package]
+name = "segtree_lazy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+traits = { path = "../traits" }
+
+[dev-dependencies]
+op_add = { path = "../op_add" }
+op_affine = { path = "../op_affine" }
+
+input.workspace = true
+output.workspace = true
+from_bytes.workspace = true
+compress.workspace = true

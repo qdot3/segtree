@@ -1,0 +1,20 @@
+[package]
+name = "segtree"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+traits = { path = "../traits" }
+
+
+[dev-dependencies]
+op_add = { path = "../op_add" }
+
+input.workspace = true
+output.workspace = true
+from_bytes.workspace = true
+
+compress.workspace = true
+
+[lints]
+workspace = true
