@@ -34,4 +34,4 @@ compress = { git = "https://github.com/qdot3/lib-cp" }
 
 [workspace.lints]
 clippy.pedantic = "warn"
-clippy.cargo = "warn"
+# clippy.cargo = "warn"
