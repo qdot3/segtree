@@ -1,5 +1,15 @@
 [workspace.package]
+authors = ["qdot3"]
 edition = "2021"
+
+keywords = []
+publish = false
+
+readme = "/README.md"
+license = "MIT"
+license-file = "/LICENSE"
+
+exclude = ["/rust-toolchain.toml"]
 
 [workspace]
 resolver = "2"
@@ -24,3 +34,4 @@ compress = { git = "https://github.com/qdot3/lib-cp" }
 
 [workspace.lints]
 clippy.pedantic = "warn"
+clippy.cargo = "warn"
