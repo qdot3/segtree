@@ -38,6 +38,7 @@ where
     }
 
     /// Returns the number of elements in the deque.
+    #[must_use]
     pub fn len(&self) -> usize {
         if std::mem::size_of::<T::Set>() == 0 {
             // FIXME
@@ -48,6 +49,7 @@ where
     }
 
     /// Returns `true` if the deque contains no elements.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.head.is_empty() && self.tail.is_empty()
     }

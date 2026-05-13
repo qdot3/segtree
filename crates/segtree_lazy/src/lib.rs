@@ -364,6 +364,7 @@ where
         Query::op(acc_l, acc_r)
     }
 
+    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
     ///
     /// The `LazySegtree` is assumed to be partitioned according to the given predicate.
@@ -437,6 +438,7 @@ where
         (acc, l.wrapping_sub(self.offset).min(self.len))
     }
 
+    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
     ///
     /// The `LazySegtree` is assumed to be partitioned according to the given predicate.

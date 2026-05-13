@@ -18,6 +18,10 @@ impl<T> Segtree<T>
 where
     T: Monoid<Set: Copy>,
 {
+    /// # Panics
+    ///
+    /// `len` must be less than `isize::MAX`.
+    #[must_use]
     pub fn new(len: usize) -> Self {
         static MSG: &str = "`len` must be less than `isize::MAX`";
 
@@ -129,6 +133,7 @@ where
         }
     }
 
+    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
     ///
     /// The `LazySegtree` is assumed to be partitioned according to the given predicate.
@@ -194,6 +199,7 @@ where
         (acc, l.wrapping_sub(self.offset).min(self.len))
     }
 
+    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
     ///
     /// The `LazySegtree` is assumed to be partitioned according to the given predicate.
