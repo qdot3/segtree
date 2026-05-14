@@ -19,6 +19,18 @@ where
 
 impl<T> DualSegtree<T>
 where
+    T: Monoid,
+{
+    /// Returns the number of elements.
+    #[allow(clippy::len_without_is_empty)]
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+}
+
+impl<T> DualSegtree<T>
+where
     T: Monoid<Set: Copy>,
 {
     /// Creates a new instance.
@@ -40,17 +52,7 @@ where
         }
     }
 
-    #[allow(clippy::inline_always)]
-    #[inline(always)]
-    fn propagate_above(&mut self, p: usize) {
-        for p in (1..usize::BITS - p.leading_zeros()).rev().map(|d| p >> d) {
-            self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
-            self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
-            self.data[p] = T::id();
-        }
-    }
-
-    /// Returns a slice containing the updated values.
+    /// Returns a slice containing the updated elements.
     ///
     /// # Time complexity
     ///
@@ -65,7 +67,67 @@ where
         &self.data[self.offset..][..self.len]
     }
 
-    /// Gets `i`-th element
+    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
+    /// Returns a mutable slice of the elements in `range`.
+    ///
+    /// This method is efficient for updating consecutive elements individually.
+    /// If all elements are updated in the same way, [`Self::range_update`]
+    /// is generally more efficient.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `range` is out of bounds.
+    ///
+    /// # Time complexity
+    ///
+    /// O(R + log N), where R is `range.len()`.
+    pub fn as_mut_slice<R>(&mut self, range: R) -> &mut [T::Set]
+    where
+        R: RangeBounds<usize>,
+    {
+        static MSG: &str = "index out of bounds";
+
+        let l = match range.start_bound() {
+            std::ops::Bound::Included(l) => l.checked_add(self.offset).expect(MSG),
+            std::ops::Bound::Excluded(l) => l.checked_add(self.offset + 1).expect(MSG),
+            std::ops::Bound::Unbounded => self.offset,
+        };
+        let r = match range.end_bound() {
+            std::ops::Bound::Included(r) => r.checked_add(self.offset).expect(MSG),
+            // offset > 0
+            std::ops::Bound::Excluded(r) => r.checked_add(self.offset - 1).expect(MSG),
+            std::ops::Bound::Unbounded => self.len + self.offset - 1,
+        };
+
+        if l > r {
+            return &mut [];
+        }
+        assert!(r < self.data.len(), "{}", MSG);
+
+        // FIXME: can be skipped for commutative ops
+        // lazy propagation
+        for d in (1..=self.offset.trailing_zeros()).rev() {
+            for p in l << d..=r << d {
+                self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
+                self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
+                self.data[p] = T::id();
+            }
+        }
+
+        &mut self.data[l..=r]
+    }
+
+    #[allow(clippy::inline_always)]
+    #[inline(always)]
+    fn propagate_above(&mut self, p: usize) {
+        for p in (1..usize::BITS - p.leading_zeros()).rev().map(|d| p >> d) {
+            self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
+            self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
+            self.data[p] = T::id();
+        }
+    }
+
+    /// Gets `i`-th element.
     ///
     /// # Panics
     ///
@@ -107,7 +169,7 @@ where
         self.data[i] = T::op(self.data[i], update);
     }
 
-    /// Updates elements in the `range` using [`T::op(*, update)`](traits::SemiGroup::op).
+    /// Updates the elements in `range` using [`T::op(*, update)`](traits::SemiGroup::op).
     ///
     /// # Panics
     ///

@@ -75,7 +75,7 @@ source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa80781
 
 [[package]]
 name = "segtree"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "compress",
  "from_bytes",
@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "segtree_dual"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "from_bytes",
  "input",

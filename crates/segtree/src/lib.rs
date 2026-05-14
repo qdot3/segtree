@@ -16,6 +16,24 @@ where
 
 impl<T> Segtree<T>
 where
+    T: Monoid,
+{
+    /// Returns the number of elements.
+    #[allow(clippy::len_without_is_empty)]
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Returns a slice of updated elements.
+    #[must_use]
+    pub fn as_slice(&self) -> &[T::Set] {
+        &self.data[self.offset..][..self.len]
+    }
+}
+
+impl<T> Segtree<T>
+where
     T: Monoid<Set: Copy>,
 {
     /// # Panics
@@ -33,12 +51,6 @@ where
             offset,
             len,
         }
-    }
-
-    /// Returns a slice of updated values.
-    #[must_use]
-    pub fn as_slice(&self) -> &[T::Set] {
-        &self.data[self.offset..][..self.len]
     }
 
     /// Get `i`-th element.
@@ -85,7 +97,7 @@ where
         if l >= r {
             return T::id();
         }
-        assert!(r <= self.data.len(), "{}", MSG);
+        assert!(r <= self.offset + self.len, "{}", MSG);
 
         l >>= l.trailing_zeros();
         r >>= r.trailing_zeros();
@@ -109,7 +121,7 @@ where
         T::op(acc_l, acc_r)
     }
 
-    /// Updates `i`-th element using `f`,
+    /// Updates `i`-th element using `f`.
     ///
     /// # Panics
     ///
@@ -131,6 +143,22 @@ where
             i /= 2;
             self.data[i] = T::op(self.data[i * 2], self.data[i * 2 + 1]);
         }
+    }
+
+    /// Returns a handler for batched updates.
+    ///
+    /// [`BatchUpdater`] allows multiple updates to be performed with a single
+    /// recalculation of segment tree nodes.
+    ///
+    /// This method is efficient when updating consecutive elements.
+    ///
+    /// # Time complexity
+    ///
+    /// O(R - L + log N) when the handler is dropped,
+    /// where `L` and `R` are the smallest and largest updated indices, respectively.
+    #[must_use]
+    pub fn batch_updater(&mut self) -> BatchUpdater<'_, T> {
+        BatchUpdater::new(self)
     }
 
     #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
@@ -314,6 +342,79 @@ where
             data: data.into_boxed_slice(),
             offset,
             len,
+        }
+    }
+}
+
+pub struct BatchUpdater<'a, T>
+where
+    T: Monoid<Set: Copy>,
+{
+    segtree: &'a mut Segtree<T>,
+    // inclusive range
+    l: usize,
+    r: usize,
+}
+
+impl<'a, T> BatchUpdater<'a, T>
+where
+    T: Monoid<Set: Copy>,
+{
+    fn new(segtree: &'a mut Segtree<T>) -> BatchUpdater<'a, T> {
+        Self {
+            segtree,
+            // empty range
+            l: usize::MAX,
+            r: 0,
+        }
+    }
+
+    /// Updates `i`-th element using `f`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `i` is out of bounds.
+    ///
+    /// # Time complexity
+    ///
+    /// O(log N)
+    pub fn point_update<F>(&mut self, mut i: usize, f: F)
+    where
+        F: FnOnce(T::Set) -> T::Set,
+    {
+        let Self { segtree, l, r } = self;
+
+        assert!(i < segtree.len(), "index out of bounds.");
+        i += segtree.offset;
+
+        // update range for future recalculation
+        *l = (*l).min(i);
+        *r = (*r).max(i);
+        // update i-th element
+        segtree.data[i] = f(segtree.data[i]);
+    }
+}
+
+impl<T> Drop for BatchUpdater<'_, T>
+where
+    T: Monoid<Set: Copy>,
+{
+    fn drop(&mut self) {
+        let data = &mut self.segtree.data;
+        let [mut l, mut r] = [self.l / 2, self.r / 2];
+
+        // recalculate ancestors
+        while l < r {
+            for p in l..=r {
+                data[p] = T::op(data[p * 2], data[p * 2 + 1]);
+            }
+            l /= 2;
+            r /= 2;
+        }
+        // `r` is initialized to `0`
+        while r > 0 {
+            data[r] = T::op(data[r * 2], data[r * 2 + 1]);
+            r /= 2;
         }
     }
 }
