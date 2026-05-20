@@ -1,4 +1,4 @@
-/// Verified at <https://judge.yosupo.jp/problem/point_set_range_composite>
+//! Verified at <https://judge.yosupo.jp/problem/point_set_range_composite>
 use std::io::{stdin, stdout, BufWriter, Write};
 
 use input::{bind, FastInput};
@@ -13,9 +13,16 @@ fn main() {
     let mut output = BufWriter::with_capacity(1 << 18, stdout().lock());
     let mut buf = IntBuffer::new();
 
-    bind! { input >> n: usize, q: usize, ab: [(u32, u32); n], }
+    bind! { input >> n: usize, q: usize, }
 
-    let mut segtree = Segtree::<OpAffine>::from(ab);
+    let mut segtree = Segtree::<OpAffine>::new(n);
+    {
+        let mut batch = segtree.batch_updater();
+        for i in 0..n {
+            bind! { input >> a: u32, b: u32, }
+            batch.point_update(i, |_| (a, b));
+        }
+    }
 
     const B: u32 = 30;
     let mut updates = Vec::with_capacity(q);

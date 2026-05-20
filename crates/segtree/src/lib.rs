@@ -360,6 +360,10 @@ impl<'a, T> BatchUpdater<'a, T>
 where
     T: Monoid<Set: Copy>,
 {
+    #[allow(
+        clippy::single_call_fn,
+        reason = "`point_update()` and `drop()` depend on initial range"
+    )]
     fn new(segtree: &'a mut Segtree<T>) -> BatchUpdater<'a, T> {
         Self {
             segtree,
@@ -377,7 +381,7 @@ where
     ///
     /// # Time complexity
     ///
-    /// O(log N)
+    /// O(1)
     pub fn point_update<F>(&mut self, mut i: usize, f: F)
     where
         F: FnOnce(T::Set) -> T::Set,
@@ -399,13 +403,14 @@ impl<T> Drop for BatchUpdater<'_, T>
 where
     T: Monoid<Set: Copy>,
 {
+    #[inline]
     fn drop(&mut self) {
         let data = &mut self.segtree.data;
         let [mut l, mut r] = [self.l / 2, self.r / 2];
 
         // recalculate ancestors
         while l < r {
-            for p in l..=r {
+            for p in (l..=r).rev() {
                 data[p] = T::op(data[p * 2], data[p * 2 + 1]);
             }
             l /= 2;

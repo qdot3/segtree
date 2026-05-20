@@ -8,7 +8,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-segtree = { git = "https://github.com/qdot3/segtree", version="0.2.0" }
+segtree = { git = "https://github.com/qdot3/segtree", version="0.2.1" }
 segtree_dual = { git = "https://github.com/qdot3/segtree", version="0.2.0" }
 segtree_lazy = { git = "https://github.com/qdot3/segtree", version="0.1.1" }
 segtree_traits = { git = "https://github.com/qdot3/segtree", package = "traits", version="0.1.0" }

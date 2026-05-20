@@ -1,34 +1,44 @@
 /// Verified at <https://judge.yosupo.jp/problem/point_set_range_composite>
 use std::io::{stdin, stdout, BufWriter, Write};
 
-use input::{bind, FastInput};
 use output::IntBuffer;
+use reader::FastBufReader;
 use segtree::Segtree;
 use traits::{Identity, SemiGroup};
 
 const MOD: u64 = 998_244_353;
 
 fn main() {
-    let mut input: FastInput<std::io::StdinLock<'_>> = FastInput::new(stdin().lock());
+    let mut input = FastBufReader::<{ 1 << 16 }, _>::new(stdin().lock());
     let mut output = BufWriter::with_capacity(1 << 18, stdout().lock());
     let mut buf = IntBuffer::new();
 
-    bind! { input >> n: usize, q: usize, ab: [(u32, u32); n], }
+    let n: usize = input.parse_next_token().unwrap();
+    let q: usize = input.parse_next_token().unwrap();
 
-    let mut segtree = Segtree::<OpAffine>::from(ab);
+    let mut segtree = Segtree::<OpAffine>::from((0..n).map(|_| {
+        (
+            input.parse_next_token::<u32>().unwrap(),
+            input.parse_next_token::<u32>().unwrap(),
+        )
+    }));
 
     for _ in 0..q {
-        bind! { input >> t: u8, }
+        let t: usize = input.parse_next_token().unwrap();
 
         if t == 0 {
-            bind! { input >> p: usize, c: u32, d: u32, }
+            let p: usize = input.parse_next_token().unwrap();
+            let c: u32 = input.parse_next_token().unwrap();
+            let d: u32 = input.parse_next_token().unwrap();
 
             segtree.point_update(p, |_| (c, d));
 
             #[cfg(debug_assertions)]
             println!("{:?}", segtree);
         } else {
-            bind! { input >> l: usize, r: usize, x: u64, }
+            let l: usize = input.parse_next_token().unwrap();
+            let r: usize = input.parse_next_token().unwrap();
+            let x: u64 = input.parse_next_token().unwrap();
 
             let (a, b) = segtree.range_query(l..r);
 

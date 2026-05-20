@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "compress"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
+source = "git+https://github.com/qdot3/lib-cp#920c7ab32cc21b5b5bf3beda9ec225eb29365b7d"
 
 [[package]]
 name = "foldable_deque"
@@ -30,12 +30,12 @@ dependencies = [
 [[package]]
 name = "from_bytes"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
+source = "git+https://github.com/qdot3/lib-cp#920c7ab32cc21b5b5bf3beda9ec225eb29365b7d"
 
 [[package]]
 name = "input"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
+source = "git+https://github.com/qdot3/lib-cp#920c7ab32cc21b5b5bf3beda9ec225eb29365b7d"
 dependencies = [
  "from_bytes",
 ]
@@ -71,17 +71,26 @@ dependencies = [
 [[package]]
 name = "output"
 version = "0.1.0"
-source = "git+https://github.com/qdot3/lib-cp#785c480053d81ab09498ed4922bfa8078110f750"
+source = "git+https://github.com/qdot3/lib-cp#920c7ab32cc21b5b5bf3beda9ec225eb29365b7d"
+
+[[package]]
+name = "reader"
+version = "0.1.0"
+source = "git+https://github.com/qdot3/lib-cp#920c7ab32cc21b5b5bf3beda9ec225eb29365b7d"
+dependencies = [
+ "from_bytes",
+]
 
 [[package]]
 name = "segtree"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "compress",
  "from_bytes",
  "input",
  "op_add",
  "output",
+ "reader",
  "traits",
 ]
 
