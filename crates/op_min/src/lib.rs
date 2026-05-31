@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use traits::{Identity, SemiGroup};
+use traits::{Idempotent, Identity, SemiGroup};
 
 pub struct OpMin<T>(PhantomData<T>);
 
@@ -14,6 +14,8 @@ where
         lhs.min(rhs)
     }
 }
+
+impl<T> Idempotent for OpMin<T> where T: Ord {}
 
 macro_rules! int_min_id_impl {
     ($( $t:ty )*) => {$(

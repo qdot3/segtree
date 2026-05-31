@@ -7,7 +7,6 @@ publish = false
 
 readme = "/README.md"
 license = "MIT"
-license-file = "/LICENSE"
 
 exclude = ["/rust-toolchain.toml"]
 
@@ -22,7 +21,7 @@ members = [
     "crates/op_min",
     "crates/segtree",
     "crates/segtree_dual",
-    "crates/segtree_lazy",
+    "crates/segtree_lazy", "crates/sparse_table",
     "crates/traits",
 ]
 

@@ -56,14 +56,14 @@ dependencies = [
 
 [[package]]
 name = "op_max"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "traits",
 ]
 
 [[package]]
 name = "op_min"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "traits",
 ]
@@ -120,5 +120,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "traits"
+name = "sparse_table"
 version = "0.1.0"
+dependencies = [
+ "from_bytes",
+ "op_min",
+ "output",
+ "reader",
+ "traits",
+]
+
+[[package]]
+name = "traits"
+version = "0.1.1"

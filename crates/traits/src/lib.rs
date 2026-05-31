@@ -47,3 +47,5 @@ macro_rules! tuple_impl {
 tuple_impl!(T0, 0 | T1, 1);
 tuple_impl!(T0, 0 | T1, 1 | T2, 2);
 tuple_impl!(T0, 0 | T1, 1 | T2, 2 | T3, 3);
+
+pub trait Idempotent: SemiGroup {}

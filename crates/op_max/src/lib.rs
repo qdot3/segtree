@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use traits::{Identity, SemiGroup};
+use traits::{Idempotent, Identity, SemiGroup};
 
 pub struct OpMax<T>(PhantomData<T>);
 
@@ -14,6 +14,8 @@ where
         lhs.max(rhs)
     }
 }
+
+impl<T> Idempotent for OpMax<T> where T: Ord {}
 
 macro_rules! int_max_id_impl {
     ($( $t:ty )*) => {$(
