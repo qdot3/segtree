@@ -164,25 +164,6 @@ where
     #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
     ///
-    /// The `LazySegtree` is assumed to be partitioned according to the given predicate.
-    /// That is, once the predicate returns `false`, it must remain `false` for all larger ranges.
-    /// Otherwise, the returned value is unspecified.
-    ///
-    /// ```no_run
-    /// // Illustrative example of the behavior.
-    /// let (v, p) = lst.right_partition(l, pred);
-    /// assert_eq!(v, lst.range_query(l..p));
-    ///
-    /// for r in l..p {
-    ///     let v = lst.range_query(l..r);
-    ///     assert!(pred(v));
-    /// }
-    /// for r in p.. {
-    ///     let v = lst.range_query(l..r);
-    ///     assert!(!pred(v));
-    /// }
-    /// ```
-    ///
     /// # Panics
     ///
     /// Panics if `l` is out of bounds.
@@ -229,25 +210,6 @@ where
 
     #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
     /// Performs an operation similar to [`slice::partition_point`].
-    ///
-    /// The `LazySegtree` is assumed to be partitioned according to the given predicate.
-    /// That is, once the predicate returns `false`, it must remain `false` for all larger ranges.
-    /// Otherwise, the returned value is unspecified.
-    ///
-    /// ```no_run
-    /// // Illustrative example of the behavior.
-    /// let (v, p) = lst.left_partition(r, pred);
-    /// assert_eq!(v, lst.range_query(p..r));
-    ///
-    /// for l in 0..p {
-    ///     let v = lst.range_query(l..r);
-    ///     assert!(!pred(v));
-    /// }
-    /// for l in p..r {
-    ///     let v = lst.range_query(l..r);
-    ///     assert!(pred(v));
-    /// }
-    /// ```
     ///
     /// # Panics
     ///

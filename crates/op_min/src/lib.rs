@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use traits::{Idempotent, Identity, SemiGroup};
+use traits::{Commutative, Idempotent, Identity, SemiGroup};
 
 pub struct OpMin<T>(PhantomData<T>);
 
@@ -15,7 +15,9 @@ where
     }
 }
 
-impl<T> Idempotent for OpMin<T> where T: Ord {}
+impl<T> Idempotent for OpMin<T> where Self: SemiGroup {}
+
+impl<T> Commutative for OpMin<T> where Self: SemiGroup {}
 
 macro_rules! int_min_id_impl {
     ($( $t:ty )*) => {$(

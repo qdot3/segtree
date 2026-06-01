@@ -3,7 +3,7 @@ use std::{
     ops::{Add, Neg},
 };
 
-use traits::{Identity, Inverse, SemiGroup};
+use traits::{Commutative, Identity, Inverse, SemiGroup};
 
 #[derive(Debug, Clone, Copy)]
 pub struct OpAdd<T>(PhantomData<T>);
@@ -36,3 +36,5 @@ where
         -x
     }
 }
+
+impl<T> Commutative for OpAdd<T> where Self: SemiGroup {}
