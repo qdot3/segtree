@@ -31,7 +31,7 @@ where
         let r = match range.end_bound() {
             std::ops::Bound::Included(r) => *r,
             std::ops::Bound::Excluded(r) => r.checked_sub(1)?,
-            std::ops::Bound::Unbounded => self.values.len() - 1,
+            std::ops::Bound::Unbounded => self.values.len().checked_sub(1)?,
         };
 
         if l > r || r >= self.values.len() {
