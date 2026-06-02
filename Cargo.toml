@@ -12,7 +12,8 @@ exclude = ["/rust-toolchain.toml"]
 
 [workspace]
 resolver = "2"
-members = [ "crates/bit",
+members = [
+    "crates/bit",
     "crates/foldable_deque",
     "crates/foldable_queue",
     "crates/op_add",
