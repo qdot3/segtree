@@ -127,6 +127,7 @@ dependencies = [
  "op_add",
  "op_affine",
  "output",
+ "reader",
  "traits",
 ]
 

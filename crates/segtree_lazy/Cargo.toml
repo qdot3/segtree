@@ -11,6 +11,8 @@ op_add = { path = "../op_add" }
 op_affine = { path = "../op_affine" }
 
 input.workspace = true
+reader.workspace = true
 output.workspace = true
 from_bytes.workspace = true
+
 compress.workspace = true
