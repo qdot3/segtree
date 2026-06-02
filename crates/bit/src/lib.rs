@@ -1,5 +1,6 @@
-use traits::{Commutative, Monoid};
+use traits::{Commutative, Group, Monoid};
 
+/// Binary indexed tree (BIT).
 #[derive(Debug, Clone)]
 pub struct BIT<T>
 where
@@ -37,7 +38,9 @@ where
         result
     }
 
-    /// Updates `i`-th element using `T::op(elem[i], update)`.
+    /// Updates `i`-th element using [`T::op(*, update)`].
+    ///
+    /// [`T::op(*, update)`]: traits::SemiGroup::op
     ///
     /// # Time complexity
     ///
@@ -45,7 +48,16 @@ where
     pub fn point_update(&mut self, mut i: usize, update: T::Set) {
         while let Some(v) = self.data.get_mut(i) {
             *v = T::op(*v, update);
-            i |= i + 1
+
+            if const { std::mem::size_of::<T::Set>() == 0 } {
+                match i.overflowing_add(1) {
+                    (j, false) => i |= j,
+                    (_, true) => break,
+                }
+            } else {
+                // never overflow since `i < isize::MAX`
+                i |= i + 1
+            }
         }
     }
 
@@ -75,6 +87,29 @@ where
         }
 
         (n, prefix)
+    }
+}
+
+impl<T> BIT<T>
+where
+    T: Commutative + Group<Set: Copy>,
+{
+    /// Gets `i`-th element.
+    ///
+    /// # Time complexity
+    ///
+    /// O(log N)
+    pub fn get(&self, i: usize) -> T::Set {
+        let acc_r = self.data[i];
+
+        let mut acc_l = T::id();
+        let mut w = 1;
+        while w & i > 0 {
+            acc_l = T::op(acc_l, self.data[i ^ w]);
+            w <<= 1;
+        }
+
+        T::op(acc_r, T::inv(acc_l))
     }
 }
 
