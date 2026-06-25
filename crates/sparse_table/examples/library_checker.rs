@@ -23,7 +23,7 @@ fn main() {
         let l: usize = input.parse_next_token().unwrap();
         let r: usize = input.parse_next_token().unwrap();
 
-        let a = rmq.query(l..r).unwrap();
+        let a = rmq.range_query(l..r).unwrap();
 
         output.write(buf.format(a).as_bytes()).unwrap();
         output.write(b"\n").unwrap();

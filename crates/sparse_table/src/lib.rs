@@ -19,7 +19,7 @@ where
     T: Idempotent,
     T::Set: Copy,
 {
-    pub fn query<R>(&self, range: R) -> Option<T::Set>
+    pub fn range_query<R>(&self, range: R) -> Option<T::Set>
     where
         R: RangeBounds<usize>,
     {
