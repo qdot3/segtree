@@ -42,6 +42,10 @@ macro_rules! tuple_impl {
                 ($( <$t>::inv(x.$i) ),*)
             }
         }
+
+        impl<$( $t: Commutative ),*> Commutative for ($( $t ),*) {}
+
+        impl<$( $t: Idempotent ),*> Idempotent for ($( $t ),*) {}
     };
 }
 tuple_impl!(T0, 0 | T1, 1);

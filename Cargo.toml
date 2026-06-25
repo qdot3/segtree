@@ -17,7 +17,7 @@ members = [
     "crates/foldable_deque",
     "crates/foldable_queue",
     "crates/op_add",
-    "crates/op_affine",
+    "crates/op_affine", "crates/op_bitand", "crates/op_bitor", "crates/op_bitxor",
     "crates/op_max",
     "crates/op_min",
     "crates/segtree",

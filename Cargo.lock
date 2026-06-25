@@ -66,6 +66,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "op_bitand"
+version = "0.1.0"
+dependencies = [
+ "traits",
+]
+
+[[package]]
+name = "op_bitor"
+version = "0.1.0"
+dependencies = [
+ "traits",
+]
+
+[[package]]
+name = "op_bitxor"
+version = "0.1.0"
+dependencies = [
+ "traits",
+]
+
+[[package]]
 name = "op_max"
 version = "0.1.2"
 dependencies = [
@@ -144,4 +165,4 @@ dependencies = [
 
 [[package]]
 name = "traits"
-version = "0.1.2"
+version = "0.1.3"
