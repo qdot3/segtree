@@ -11,12 +11,15 @@ where
 
 impl<T> BIT<T>
 where
-    T: Commutative + Monoid<Set: Copy>,
+    T: Commutative + Monoid,
 {
     /// Constructs new instance initialized with the [`identity element`].
     ///
     /// [`identity element`]: traits::Identity::id
-    pub fn new(n: usize) -> Self {
+    pub fn new(n: usize) -> Self
+    where
+        T::Set: Clone,
+    {
         Self {
             data: vec![T::id(); n],
         }
@@ -32,7 +35,7 @@ where
     pub fn prefix_query(&self, mut n: usize) -> T::Set {
         let mut result = T::id();
         while n > 0 {
-            result = T::op(result, self.data[n - 1]);
+            result = T::op(&result, &self.data[n - 1]);
             n &= n - 1;
         }
         result
@@ -47,7 +50,7 @@ where
     /// O(log N)
     pub fn point_update(&mut self, mut i: usize, update: T::Set) {
         while let Some(v) = self.data.get_mut(i) {
-            *v = T::op(*v, update);
+            *v = T::op(v, &update);
 
             if const { std::mem::size_of::<T::Set>() == 0 } {
                 match i.overflowing_add(1) {
@@ -68,7 +71,7 @@ where
     /// O(log N)
     pub fn partition_point<P>(&self, mut pred: P) -> (usize, T::Set)
     where
-        P: FnMut(T::Set) -> bool,
+        P: FnMut(&T::Set) -> bool,
     {
         let mut n = 0;
         let mut prefix = T::id();
@@ -77,9 +80,9 @@ where
             .rev()
             .map(|w| 1 << w)
         {
-            if let Some(v) = self.data.get(n + w - 1).copied() {
-                let v = T::op(v, prefix);
-                if pred(v) {
+            if let Some(v) = self.data.get(n + w - 1) {
+                let v = T::op(v, &prefix);
+                if pred(&v) {
                     prefix = v;
                     n += w;
                 }
@@ -92,7 +95,7 @@ where
 
 impl<T> BIT<T>
 where
-    T: Commutative + Group<Set: Copy>,
+    T: Commutative + Group,
 {
     /// Gets `i`-th element.
     ///
@@ -100,22 +103,22 @@ where
     ///
     /// O(log N)
     pub fn get(&self, i: usize) -> T::Set {
-        let acc_r = self.data[i];
+        let acc_r = &self.data[i];
 
         let mut acc_l = T::id();
         let mut w = 1;
         while w & i > 0 {
-            acc_l = T::op(acc_l, self.data[i ^ w]);
+            acc_l = T::op(&acc_l, &self.data[i ^ w]);
             w <<= 1;
         }
 
-        T::op(acc_r, T::inv(acc_l))
+        T::op(acc_r, &T::inv(&acc_l))
     }
 }
 
 impl<T> From<Vec<T::Set>> for BIT<T>
 where
-    T: Commutative + Monoid<Set: Copy>,
+    T: Commutative + Monoid,
 {
     /// # Time complexity
     ///
@@ -126,7 +129,7 @@ where
             let p = i | (i + 1);
             // FIXME: optimize and remove this
             if p < value.len() {
-                value[p] = T::op(value[p], value[i]);
+                value[p] = T::op(&value[p], &value[i]);
             }
         }
 

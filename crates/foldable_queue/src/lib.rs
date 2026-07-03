@@ -11,7 +11,7 @@ where
 
 impl<T> FoldableQueue<T>
 where
-    T: Monoid<Set: Copy>,
+    T: Monoid,
 {
     /// Creates an empty queue with space for at least `capacity` elements.
     ///
@@ -58,6 +58,33 @@ where
         self.tail.clear();
     }
 
+    /// Folds every element into an accumulator using [`T::op`](traits::SemiGroup::op),
+    /// returning the final result.
+    ///
+    /// # Time complexity
+    ///
+    /// O(1)
+    #[must_use]
+    pub fn fold(&self) -> T::Set {
+        let head = if let Some(first) = self.head.last() {
+            &first[1]
+        } else {
+            &T::id()
+        };
+        let tail = if let Some(last) = self.tail.last() {
+            &last[1]
+        } else {
+            &T::id()
+        };
+
+        T::op(head, tail)
+    }
+}
+
+impl<T> FoldableQueue<T>
+where
+    T: Monoid<Set: Clone>,
+{
     /// Appends an element to the back of the queue.
     ///
     /// # Time complexity
@@ -65,9 +92,9 @@ where
     /// O(1)
     pub fn push_back(&mut self, value: T::Set) {
         let folded = if let Some(prev) = self.tail.last() {
-            T::op(prev[1], value)
+            T::op(&prev[1], &value)
         } else {
-            value
+            value.clone()
         };
         self.tail.push([value, folded]);
     }
@@ -87,58 +114,10 @@ where
         self.head.reverse();
         let mut folded = T::id();
         for pair in &mut self.head {
-            folded = T::op(pair[0], folded);
-            pair[1] = folded;
+            folded = T::op(&pair[0], &folded);
+            pair[1] = folded.clone();
         }
 
         self.head.pop().map(|[value, _]| value)
-    }
-
-    /// Folds every element into an accumulator using [`T::op`](traits::SemiGroup::op),
-    /// returning the final result.
-    ///
-    /// # Time complexity
-    ///
-    /// O(1)
-    #[must_use]
-    pub fn fold(&self) -> T::Set {
-        let head = if let Some(first) = self.head.last() {
-            first[1]
-        } else {
-            T::id()
-        };
-        let tail = if let Some(last) = self.tail.last() {
-            last[1]
-        } else {
-            T::id()
-        };
-
-        T::op(head, tail)
-    }
-}
-
-impl<T> FromIterator<T::Set> for FoldableQueue<T>
-where
-    T: Monoid<Set: Copy>,
-{
-    fn from_iter<I: IntoIterator<Item = T::Set>>(iter: I) -> Self {
-        let head = {
-            // may be optimized
-            let mut head: Vec<_> = iter.into_iter().map(|v| [v, T::id()]).collect();
-            head.reverse();
-
-            let mut folded = T::id();
-            for pair in &mut head {
-                folded = T::op(pair[0], folded);
-                pair[1] = folded;
-            }
-
-            head
-        };
-
-        Self {
-            head,
-            tail: Vec::new(),
-        }
     }
 }

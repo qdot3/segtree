@@ -50,7 +50,7 @@ pub struct OpAffine;
 impl SemiGroup for OpAffine {
     type Set = (u32, u32);
 
-    fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set {
+    fn op(lhs: &Self::Set, rhs: &Self::Set) -> Self::Set {
         let a = lhs.0 as u64 * rhs.0 as u64 % MOD;
         let b = (lhs.1 as u64 * rhs.0 as u64 + rhs.1 as u64) % MOD;
         (a as u32, b as u32)

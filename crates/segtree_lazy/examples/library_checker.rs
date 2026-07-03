@@ -21,7 +21,7 @@ fn main() {
     type Query = (OpAdd<u64>, OpAdd<u64>);
 
     let mut lst = LazySegtree::<Update, Query, _>::from_iter(
-        |(a, b), (sum, n)| ((a * (sum % MOD) + b * n) % MOD, n),
+        |&(a, b), &(sum, n)| ((a * (sum % MOD) + b * n) % MOD, n),
         (0..n).map(|_| {
             let a: u64 = input.parse_next_token().unwrap();
             (a, 1)
@@ -47,9 +47,6 @@ fn main() {
             output.write(buf.format(sum).as_bytes()).unwrap();
             output.write(b"\n").unwrap();
         }
-
-        #[cfg(debug_assertions)]
-        println!("{:?}", lst)
     }
 }
 
@@ -58,7 +55,7 @@ pub struct OpAffine;
 impl SemiGroup for OpAffine {
     type Set = (u64, u64);
 
-    fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set {
+    fn op(lhs: &Self::Set, rhs: &Self::Set) -> Self::Set {
         (lhs.0 * rhs.0 % MOD, (lhs.1 * rhs.0 + rhs.1) % MOD)
     }
 }

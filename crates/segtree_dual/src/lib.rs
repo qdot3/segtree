@@ -21,25 +21,16 @@ impl<T> DualSegtree<T>
 where
     T: Monoid,
 {
-    /// Returns the number of elements.
-    #[allow(clippy::len_without_is_empty)]
-    #[must_use]
-    pub const fn len(&self) -> usize {
-        self.len
-    }
-}
-
-impl<T> DualSegtree<T>
-where
-    T: Monoid<Set: Copy>,
-{
     /// Creates a new instance.
     ///
     /// # Panics
     ///
     /// `len` must be less than `isize::MAX`.
     #[must_use]
-    pub fn new(len: usize) -> Self {
+    pub fn new(len: usize) -> Self
+    where
+        T::Set: Clone,
+    {
         static MSG: &str = "`len` must be less than `isize::MAX`";
 
         let offset = len.checked_next_power_of_two().expect(MSG);
@@ -52,6 +43,13 @@ where
         }
     }
 
+    /// Returns the number of elements.
+    #[allow(clippy::len_without_is_empty)]
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+
     /// Returns a slice containing the updated elements.
     ///
     /// # Time complexity
@@ -60,8 +58,8 @@ where
     #[must_use]
     pub fn as_slice(&mut self) -> &[T::Set] {
         for p in 1..self.data.len() / 2 {
-            self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
-            self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
+            self.data[p * 2] = T::op(&self.data[p * 2], &self.data[p]);
+            self.data[p * 2 + 1] = T::op(&self.data[p * 2 + 1], &self.data[p]);
             self.data[p] = T::id();
         }
         &self.data[self.offset..][..self.len]
@@ -108,8 +106,8 @@ where
         // lazy propagation
         for d in (1..=self.offset.trailing_zeros()).rev() {
             for p in l << d..=r << d {
-                self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
-                self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
+                self.data[p * 2] = T::op(&self.data[p * 2], &self.data[p]);
+                self.data[p * 2 + 1] = T::op(&self.data[p * 2 + 1], &self.data[p]);
                 self.data[p] = T::id();
             }
         }
@@ -121,8 +119,8 @@ where
     #[inline(always)]
     fn propagate_above(&mut self, p: usize) {
         for p in (1..usize::BITS - p.leading_zeros()).rev().map(|d| p >> d) {
-            self.data[p * 2] = T::op(self.data[p * 2], self.data[p]);
-            self.data[p * 2 + 1] = T::op(self.data[p * 2 + 1], self.data[p]);
+            self.data[p * 2] = T::op(&self.data[p * 2], &self.data[p]);
+            self.data[p * 2 + 1] = T::op(&self.data[p * 2 + 1], &self.data[p]);
             self.data[p] = T::id();
         }
     }
@@ -141,10 +139,10 @@ where
         assert!(i < self.len, "index out of bounds");
         i += self.offset;
 
-        let mut acc = self.data[i];
-        while i > 1 {
+        let mut acc = T::id();
+        while i > 0 {
+            acc = T::op(&acc, &self.data[i]);
             i /= 2;
-            acc = T::op(acc, self.data[i]);
         }
 
         acc
@@ -166,7 +164,7 @@ where
         // lazy propagation
         // FIXME: can be skipped for commutative ops
         self.propagate_above(i);
-        self.data[i] = T::op(self.data[i], update);
+        self.data[i] = T::op(&self.data[i], &update);
     }
 
     /// Updates the elements in `range` using [`T::op(*, update)`](traits::SemiGroup::op).
@@ -211,12 +209,12 @@ where
         // step 2. update
         while {
             if l >= r {
-                self.data[l] = T::op(self.data[l], update);
+                self.data[l] = T::op(&self.data[l], &update);
                 l += 1;
                 l >>= l.trailing_zeros();
             } else {
                 r -= 1;
-                self.data[r] = T::op(self.data[r], update);
+                self.data[r] = T::op(&self.data[r], &update);
                 r >>= r.trailing_zeros();
             }
 
@@ -227,7 +225,7 @@ where
 
 impl<I, T> From<I> for DualSegtree<T>
 where
-    T: Monoid<Set: Copy>,
+    T: Monoid,
     I: IntoIterator<Item = T::Set>,
     I::IntoIter: ExactSizeIterator,
 {
@@ -245,7 +243,7 @@ where
         let new_len = offset.checked_add(len.next_multiple_of(2)).expect(MSG);
 
         let mut data = Vec::with_capacity(new_len);
-        data.resize(offset, T::id());
+        data.resize_with(offset, || T::id());
         data.extend(iter);
         if len & 1 == 1 {
             data.push(T::id());

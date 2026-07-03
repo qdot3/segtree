@@ -4,6 +4,7 @@ use traits::Idempotent;
 
 const B: usize = 16;
 
+/// A data structure supporting constant time range query operation.
 #[derive(Debug, Clone)]
 pub struct SparseTable<T: Idempotent> {
     summary: Box<[T::Set]>,
@@ -16,9 +17,17 @@ pub struct SparseTable<T: Idempotent> {
 
 impl<T> SparseTable<T>
 where
-    T: Idempotent,
-    T::Set: Copy,
+    T: Idempotent<Set: Clone>,
 {
+    /// Reduces elements in the `range` by idempotent [binary operation].
+    ///
+    /// If given `range ` is empty, this returns `None`.
+    ///
+    /// [binary operation]: traits::SemiGroup::op
+    ///
+    /// # Time complexity
+    ///
+    /// O(1)
     pub fn range_query<R>(&self, range: R) -> Option<T::Set>
     where
         R: RangeBounds<usize>,
@@ -45,15 +54,15 @@ where
                 let layer = &self.summary[self.partition[w]..self.partition[w + 1]];
 
                 Some(T::op(
-                    T::op(self.suffix[l], layer[bl + 1]),
-                    T::op(layer[br - (1 << w)], self.prefix[r]),
+                    &T::op(&self.suffix[l], &layer[bl + 1]),
+                    &T::op(&layer[br - (1 << w)], &self.prefix[r]),
                 ))
             }
-            std::cmp::Ordering::Equal => Some(T::op(self.suffix[l], self.prefix[r])),
+            std::cmp::Ordering::Equal => Some(T::op(&self.suffix[l], &self.prefix[r])),
             std::cmp::Ordering::Less => {
-                let mut result = self.values[l];
+                let mut result = self.values[l].clone();
                 for i in l + 1..=r {
-                    result = T::op(result, self.values[i])
+                    result = T::op(&result, &self.values[i])
                 }
                 Some(result)
             }
@@ -63,8 +72,7 @@ where
 
 impl<T> From<Box<[T::Set]>> for SparseTable<T>
 where
-    T: Idempotent,
-    T::Set: Copy,
+    T: Idempotent<Set: Clone>,
 {
     fn from(values: Box<[T::Set]>) -> Self {
         if values.is_empty() {
@@ -81,7 +89,7 @@ where
             let mut pre = values.clone();
             for chunk in pre.chunks_mut(B) {
                 for i in 1..chunk.len() {
-                    chunk[i] = T::op(chunk[i - 1], chunk[i]);
+                    chunk[i] = T::op(&chunk[i - 1], &chunk[i]);
                 }
             }
             pre
@@ -91,7 +99,7 @@ where
             let mut suf = values.clone();
             for chunk in suf.chunks_mut(B) {
                 for i in (0..chunk.len() - 1).rev() {
-                    chunk[i] = T::op(chunk[i], chunk[i + 1]);
+                    chunk[i] = T::op(&chunk[i], &chunk[i + 1]);
                 }
             }
             suf
@@ -103,7 +111,7 @@ where
 
             let mut summary = Vec::with_capacity(len * height);
             for chunk in suffix.chunks(B) {
-                summary.push(chunk[0]);
+                summary.push(chunk[0].clone());
             }
 
             let mut partition = Vec::with_capacity(height + 1);
@@ -114,7 +122,7 @@ where
                 let w = 1 << i;
 
                 for i in partition[i] + w..partition[i + 1] {
-                    summary.push(T::op(summary[i - w], summary[i]));
+                    summary.push(T::op(&summary[i - w], &summary[i]));
                 }
                 partition.push(summary.len());
             }

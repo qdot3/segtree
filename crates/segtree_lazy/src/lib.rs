@@ -4,7 +4,7 @@
 // #![allow(clippy::implicit_return)]
 // #![allow(clippy::min_ident_chars)]
 
-use std::{fmt::Debug, ops::RangeBounds};
+use std::ops::RangeBounds;
 
 use traits::Monoid;
 
@@ -12,9 +12,9 @@ use traits::Monoid;
 #[derive(Clone)]
 pub struct LazySegtree<Update, Query, Action>
 where
-    Update: Monoid<Set: Copy>,
-    Query: Monoid<Set: Copy>,
-    Action: FnMut(Update::Set, Query::Set) -> Query::Set,
+    Update: Monoid,
+    Query: Monoid,
+    Action: FnMut(&Update::Set, &Query::Set) -> Query::Set,
 {
     // full binary tree
     data: Box<[Query::Set]>,
@@ -28,9 +28,9 @@ where
 
 impl<Update, Query, Action> LazySegtree<Update, Query, Action>
 where
-    Update: Monoid<Set: Copy>,
-    Query: Monoid<Set: Copy>,
-    Action: FnMut(Update::Set, Query::Set) -> Query::Set,
+    Update: Monoid,
+    Query: Monoid,
+    Action: FnMut(&Update::Set, &Query::Set) -> Query::Set,
 {
     /// Creates a new `LazySegtree`.
     ///
@@ -50,7 +50,11 @@ where
     ///
     /// `len` must be less than `isize::MAX`.
     #[must_use]
-    pub fn new(action: Action, len: usize) -> Self {
+    pub fn new(action: Action, len: usize) -> Self
+    where
+        Query::Set: Clone,
+        Update::Set: Clone,
+    {
         static MESSAGE: &str = "`len` must be less than `isize::MAX`";
 
         let offset = len.checked_next_power_of_two().expect(MESSAGE);
@@ -84,7 +88,10 @@ where
     ///
     /// Panics if `iter.len()` exceeds `isize::MAX`.
     #[must_use]
-    pub fn from_iter(action: Action, iter: impl ExactSizeIterator<Item = Query::Set>) -> Self {
+    pub fn from_iter(action: Action, iter: impl ExactSizeIterator<Item = Query::Set>) -> Self
+    where
+        Update::Set: Clone,
+    {
         static MESSAGE: &str = "`iter.len()` must be less than `isize::MAX`.";
 
         let len = iter.len();
@@ -112,7 +119,10 @@ where
             for p in (1..len_d / 2).rev() {
                 // SAFETY: two children of `p` have already been initialized.
                 let v = unsafe {
-                    Query::op(uninit[p * 2].assume_init(), uninit[p * 2 + 1].assume_init())
+                    Query::op(
+                        uninit[p * 2].assume_init_ref(),
+                        uninit[p * 2 + 1].assume_init_ref(),
+                    )
                 };
                 uninit[p].write(v);
             }
@@ -123,7 +133,7 @@ where
 
         Self {
             data: data.into_boxed_slice(),
-            lazy: vec![Update::id(); len_l].into_boxed_slice(),
+            lazy: Box::from_iter(std::iter::repeat_n(Update::id(), len_l)),
             action,
             offset,
             len,
@@ -138,12 +148,12 @@ where
         // TODO: make unchecked after all methods are tested
         {
             let data = &mut self.data[p * 2..p * 2 + 2];
-            data[0] = (self.action)(update, data[0]);
-            data[1] = (self.action)(update, data[1]);
+            data[0] = (self.action)(&update, &data[0]);
+            data[1] = (self.action)(&update, &data[1]);
         }
         if let Some(lazy) = self.lazy.get_mut(p * 2..p * 2 + 2) {
-            lazy[0] = Update::op(lazy[0], update);
-            lazy[1] = Update::op(lazy[1], update);
+            lazy[0] = Update::op(&lazy[0], &update);
+            lazy[1] = Update::op(&lazy[1], &update);
         }
     }
 
@@ -151,7 +161,7 @@ where
     #[inline(always)]
     fn recalculate_at(&mut self, p: usize) {
         // TODO: make unchecked after all methods are tested
-        self.data[p] = Query::op(self.data[p * 2], self.data[p * 2 + 1]);
+        self.data[p] = Query::op(&self.data[p * 2], &self.data[p * 2 + 1]);
     }
 
     /// Returns a slice containing the updated values.
@@ -178,7 +188,7 @@ where
     /// O(log N)
     pub fn point_update<F>(&mut self, i: usize, f: F)
     where
-        F: FnOnce(Query::Set) -> Query::Set,
+        F: FnOnce(&Query::Set) -> Query::Set,
     {
         assert!(i < self.len, "index out of bounds");
         let i = i + self.offset;
@@ -188,7 +198,7 @@ where
             self.propagate_at(p);
         }
         // step 2. update
-        self.data[i] = f(self.data[i]);
+        self.data[i] = f(&self.data[i]);
         // step 3. recalculate ancestors
         for p in (1..=self.offset.trailing_zeros()).map(|d| i >> d) {
             self.recalculate_at(p);
@@ -242,17 +252,17 @@ where
 
             while {
                 if l >= r {
-                    self.data[l] = (self.action)(update, self.data[l]);
+                    self.data[l] = (self.action)(&update, &self.data[l]);
                     if let Some(lazy) = self.lazy.get_mut(l) {
-                        *lazy = Update::op(*lazy, update);
+                        *lazy = Update::op(lazy, &update);
                     }
                     l += 1;
                     l >>= l.trailing_zeros();
                 } else {
                     r -= 1;
-                    self.data[r] = (self.action)(update, self.data[r]);
+                    self.data[r] = (self.action)(&update, &self.data[r]);
                     if let Some(lazy) = self.lazy.get_mut(r) {
-                        *lazy = Update::op(*lazy, update);
+                        *lazy = Update::op(lazy, &update);
                     }
                     r >>= r.trailing_zeros();
                 }
@@ -284,7 +294,7 @@ where
     ///
     /// O(log N)
     #[must_use]
-    pub fn point_query(&mut self, i: usize) -> Query::Set {
+    pub fn point_query(&mut self, i: usize) -> &Query::Set {
         assert!(i < self.len, "index out of bounds");
         let i = i + self.offset;
 
@@ -293,7 +303,7 @@ where
             self.propagate_at(p);
         }
 
-        self.data[i]
+        &self.data[i]
     }
 
     /// Reduces the elements in `range` using `Query::op`.
@@ -348,12 +358,12 @@ where
 
             while {
                 if l >= r {
-                    acc_l = Query::op(acc_l, self.data[l]);
+                    acc_l = Query::op(&acc_l, &self.data[l]);
                     l += 1;
                     l >>= l.trailing_zeros();
                 } else {
                     r -= 1;
-                    acc_r = Query::op(self.data[r], acc_r);
+                    acc_r = Query::op(&self.data[r], &acc_r);
                     r >>= r.trailing_zeros();
                 }
 
@@ -361,7 +371,7 @@ where
             } {}
         }
 
-        Query::op(acc_l, acc_r)
+        Query::op(&acc_l, &acc_r)
     }
 
     #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
@@ -396,7 +406,7 @@ where
     #[must_use]
     pub fn right_partition<P>(&mut self, mut l: usize, mut pred: P) -> (Query::Set, usize)
     where
-        P: FnMut(Query::Set) -> bool,
+        P: FnMut(&Query::Set) -> bool,
     {
         assert!(l < self.len, "index out of bounds");
         l += self.offset;
@@ -409,8 +419,8 @@ where
         // step 1-2. go up
         let mut acc = Query::id();
         loop {
-            let v = Query::op(acc, self.data[l]);
-            if !pred(v) {
+            let v = Query::op(&acc, &self.data[l]);
+            if !pred(&v) {
                 break;
             }
             acc = v;
@@ -427,8 +437,8 @@ where
             self.propagate_at(l);
 
             l *= 2;
-            let v = Query::op(acc, self.data[l]);
-            if pred(v) {
+            let v = Query::op(&acc, &self.data[l]);
+            if pred(&v) {
                 acc = v;
                 l += 1;
             }
@@ -470,7 +480,7 @@ where
     #[must_use]
     pub fn left_partition<P>(&mut self, mut r: usize, mut pred: P) -> (Query::Set, usize)
     where
-        P: FnMut(Query::Set) -> bool,
+        P: FnMut(&Query::Set) -> bool,
     {
         if r == 0 {
             return (Query::id(), 0);
@@ -488,8 +498,8 @@ where
         loop {
             r -= 1;
 
-            let v = Query::op(self.data[r], acc);
-            if !pred(v) {
+            let v = Query::op(&self.data[r], &acc);
+            if !pred(&v) {
                 break;
             }
             acc = v;
@@ -505,8 +515,8 @@ where
             self.propagate_at(r);
 
             r = r * 2 + 1;
-            let v = Query::op(acc, self.data[r]);
-            if pred(v) {
+            let v = Query::op(&acc, &self.data[r]);
+            if pred(&v) {
                 acc = v;
                 r -= 1;
             }
@@ -514,22 +524,5 @@ where
 
         let (r, b) = (r + 1).overflowing_sub(self.offset);
         (acc, if b { 0 } else { r })
-    }
-}
-
-impl<Update, Query, Action> Debug for LazySegtree<Update, Query, Action>
-where
-    Update: Monoid<Set: Copy + Debug>,
-    Query: Monoid<Set: Copy + Debug>,
-    Action: FnMut(Update::Set, Query::Set) -> Query::Set,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("LazySegtree")
-            .field("data", &self.data)
-            .field("lazy", &self.lazy)
-            .field("action", &"******")
-            .field("offset", &self.offset)
-            .field("len", &self.len)
-            .finish()
     }
 }

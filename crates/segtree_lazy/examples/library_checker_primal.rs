@@ -18,7 +18,7 @@ fn main() {
     type Query = OpAdd<usize>;
 
     let mut lst = LazySegtree::<Update, Query, _>::from_iter(
-        |_, q| q,
+        |_, &q| q,
         (0..n).map(|_| parse!(input >> usize)),
     );
 
@@ -41,7 +41,7 @@ struct NoOp;
 impl SemiGroup for NoOp {
     type Set = ();
 
-    fn op(_: Self::Set, _: Self::Set) -> Self::Set {
+    fn op(_: &Self::Set, _: &Self::Set) -> Self::Set {
         ()
     }
 }

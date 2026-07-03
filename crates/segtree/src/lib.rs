@@ -18,29 +18,14 @@ impl<T> Segtree<T>
 where
     T: Monoid,
 {
-    /// Returns the number of elements.
-    #[allow(clippy::len_without_is_empty)]
-    #[must_use]
-    pub const fn len(&self) -> usize {
-        self.len
-    }
-
-    /// Returns a slice of updated elements.
-    #[must_use]
-    pub fn as_slice(&self) -> &[T::Set] {
-        &self.data[self.offset..][..self.len]
-    }
-}
-
-impl<T> Segtree<T>
-where
-    T: Monoid<Set: Copy>,
-{
     /// # Panics
     ///
     /// `len` must be less than `isize::MAX`.
     #[must_use]
-    pub fn new(len: usize) -> Self {
+    pub fn new(len: usize) -> Self
+    where
+        T::Set: Clone,
+    {
         static MSG: &str = "`len` must be less than `isize::MAX`";
 
         let offset = len.checked_next_power_of_two().expect(MSG);
@@ -53,16 +38,28 @@ where
         }
     }
 
+    /// Returns the number of elements.
+    #[allow(clippy::len_without_is_empty)]
+    #[must_use]
+    pub const fn len(&self) -> usize {
+        self.len
+    }
+
+    /// Returns a slice of updated elements.
+    #[must_use]
+    pub fn as_slice(&self) -> &[T::Set] {
+        &self.data[self.offset..][..self.len]
+    }
+
     /// Get `i`-th element.
     ///
     /// # Panics
     ///
     /// Panics if `i` is out of bounds.
     #[must_use]
-    pub fn point_query(&self, i: usize) -> T::Set {
-        assert!(i < self.len, "index out of bounds");
-
-        self.data[i + self.offset]
+    pub fn point_query(&self, i: usize) -> Option<&T::Set> {
+        let i = i.checked_add(self.offset)?;
+        self.data.get(i)
     }
 
     /// Reduces the elements in the `range` using `Query::op`.
@@ -77,27 +74,24 @@ where
     ///
     /// O(log N)
     #[must_use]
-    pub fn range_query<R>(&self, range: R) -> T::Set
+    pub fn range_query<R>(&self, range: R) -> Option<T::Set>
     where
         R: RangeBounds<usize>,
     {
-        static MSG: &str = "index out of bounds";
-
         let mut l = match range.start_bound() {
-            std::ops::Bound::Included(l) => l.checked_add(self.offset).expect(MSG),
-            std::ops::Bound::Excluded(l) => l.checked_add(self.offset + 1).expect(MSG),
+            std::ops::Bound::Included(l) => l.checked_add(self.offset)?,
+            std::ops::Bound::Excluded(l) => l.checked_add(self.offset + 1)?,
             std::ops::Bound::Unbounded => self.offset,
         };
         let mut r = match range.end_bound() {
-            std::ops::Bound::Included(r) => r.checked_add(self.offset + 1).expect(MSG),
-            std::ops::Bound::Excluded(r) => r.checked_add(self.offset).expect(MSG),
+            std::ops::Bound::Included(r) => r.checked_add(self.offset + 1)?,
+            std::ops::Bound::Excluded(r) => r.checked_add(self.offset)?,
             std::ops::Bound::Unbounded => self.len + self.offset,
         };
 
-        if l >= r {
-            return T::id();
+        if l >= r || r > self.offset + self.len {
+            return None;
         }
-        assert!(r <= self.offset + self.len, "{}", MSG);
 
         l >>= l.trailing_zeros();
         r >>= r.trailing_zeros();
@@ -106,19 +100,19 @@ where
         let mut acc_r = T::id();
         while {
             if l >= r {
-                acc_l = T::op(acc_l, self.data[l]);
+                acc_l = T::op(&acc_l, &self.data[l]);
                 l += 1;
                 l >>= l.trailing_zeros();
             } else {
                 r -= 1;
-                acc_r = T::op(self.data[r], acc_r);
+                acc_r = T::op(&self.data[r], &acc_r);
                 r >>= r.trailing_zeros();
             }
 
             l != r
         } {}
 
-        T::op(acc_l, acc_r)
+        Some(T::op(&acc_l, &acc_r))
     }
 
     /// Updates `i`-th element using `f`.
@@ -132,33 +126,17 @@ where
     /// O(log N)
     pub fn point_update<F>(&mut self, mut i: usize, f: F)
     where
-        F: FnOnce(T::Set) -> T::Set,
+        F: FnOnce(&T::Set) -> T::Set,
     {
         assert!(i < self.len, "index out of bounds");
         i += self.offset;
         // step 1. update
-        self.data[i] = f(self.data[i]);
+        self.data[i] = f(&self.data[i]);
         // step 2. recalculate ancestors
         while i > 1 {
             i /= 2;
-            self.data[i] = T::op(self.data[i * 2], self.data[i * 2 + 1]);
+            self.data[i] = T::op(&self.data[i * 2], &self.data[i * 2 + 1]);
         }
-    }
-
-    /// Returns a handler for batched updates.
-    ///
-    /// [`BatchUpdater`] allows multiple updates to be performed with a single
-    /// recalculation of segment tree nodes.
-    ///
-    /// This method is efficient when updating consecutive elements.
-    ///
-    /// # Time complexity
-    ///
-    /// O(R - L + log N) when the handler is dropped,
-    /// where `L` and `R` are the smallest and largest updated indices, respectively.
-    #[must_use]
-    pub fn batch_updater(&mut self) -> BatchUpdater<'_, T> {
-        BatchUpdater::new(self)
     }
 
     #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
@@ -174,7 +152,7 @@ where
     #[must_use]
     pub fn right_partition<P>(&self, mut l: usize, mut pred: P) -> (T::Set, usize)
     where
-        P: FnMut(T::Set) -> bool,
+        P: FnMut(&T::Set) -> bool,
     {
         assert!(l < self.len, "index out of bounds");
         l += self.offset;
@@ -182,8 +160,8 @@ where
 
         let mut acc = T::id();
         loop {
-            let v = T::op(acc, self.data[l]);
-            if !pred(v) {
+            let v = T::op(&acc, &self.data[l]);
+            if !pred(&v) {
                 break;
             }
             acc = v;
@@ -198,8 +176,8 @@ where
         while l < self.data.len() / 2 {
             l *= 2;
 
-            let v = T::op(acc, self.data[l]);
-            if pred(v) {
+            let v = T::op(&acc, &self.data[l]);
+            if pred(&v) {
                 acc = v;
                 l += 1;
             }
@@ -221,7 +199,7 @@ where
     #[must_use]
     pub fn left_partition<P>(&self, mut r: usize, mut pred: P) -> (T::Set, usize)
     where
-        P: FnMut(T::Set) -> bool,
+        P: FnMut(&T::Set) -> bool,
     {
         assert!(r <= self.len, "index out of bounds");
         r += self.offset;
@@ -231,8 +209,8 @@ where
         while !r.is_power_of_two() {
             r -= 1;
 
-            let v = T::op(acc, self.data[r]);
-            if !pred(v) {
+            let v = T::op(&acc, &self.data[r]);
+            if !pred(&v) {
                 break;
             }
             acc = v;
@@ -244,8 +222,8 @@ where
         while r < self.data.len() / 2 {
             r = r * 2 + 1;
 
-            let v = self.data[r];
-            if pred(v) {
+            let v = T::op(&self.data[r], &acc);
+            if pred(&v) {
                 acc = v;
                 r -= 1;
             }
@@ -257,7 +235,7 @@ where
 
 impl<I, T> From<I> for Segtree<T>
 where
-    T: Monoid<Set: Copy>,
+    T: Monoid,
     I: IntoIterator<Item = T::Set>,
     I::IntoIter: ExactSizeIterator,
 {
@@ -291,8 +269,12 @@ where
             // recalculate ancestors
             for p in (1..new_len / 2).rev() {
                 // SAFETY: two children of `p` have already been initialized.
-                let v =
-                    unsafe { T::op(uninit[p * 2].assume_init(), uninit[p * 2 + 1].assume_init()) };
+                let v = unsafe {
+                    T::op(
+                        &uninit[p * 2].assume_init_ref(),
+                        &uninit[p * 2 + 1].assume_init_ref(),
+                    )
+                };
                 uninit[p].write(v);
             }
             uninit[0].write(T::id());
@@ -304,84 +286,6 @@ where
             data: data.into_boxed_slice(),
             offset,
             len,
-        }
-    }
-}
-
-pub struct BatchUpdater<'a, T>
-where
-    T: Monoid<Set: Copy>,
-{
-    segtree: &'a mut Segtree<T>,
-    // inclusive range
-    l: usize,
-    r: usize,
-}
-
-impl<'a, T> BatchUpdater<'a, T>
-where
-    T: Monoid<Set: Copy>,
-{
-    #[allow(
-        clippy::single_call_fn,
-        reason = "`point_update()` and `drop()` depend on initial range"
-    )]
-    fn new(segtree: &'a mut Segtree<T>) -> BatchUpdater<'a, T> {
-        Self {
-            segtree,
-            // empty range
-            l: usize::MAX,
-            r: 0,
-        }
-    }
-
-    /// Updates `i`-th element using `f`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `i` is out of bounds.
-    ///
-    /// # Time complexity
-    ///
-    /// O(1)
-    pub fn point_update<F>(&mut self, mut i: usize, f: F)
-    where
-        F: FnOnce(T::Set) -> T::Set,
-    {
-        let Self { segtree, l, r } = self;
-
-        assert!(i < segtree.len(), "index out of bounds.");
-        i += segtree.offset;
-
-        // update range for future recalculation
-        *l = (*l).min(i);
-        *r = (*r).max(i);
-        // update i-th element
-        segtree.data[i] = f(segtree.data[i]);
-    }
-}
-
-impl<T> Drop for BatchUpdater<'_, T>
-where
-    T: Monoid<Set: Copy>,
-{
-    #[inline]
-    fn drop(&mut self) {
-        let data = &mut self.segtree.data;
-        let [mut l, mut r] = [self.l / 2, self.r / 2];
-
-        // recalculate ancestors
-        while l < r {
-            for p in (l..=r).rev() {
-                data[p] = T::op(data[p * 2], data[p * 2 + 1]);
-            }
-            l /= 2;
-            r /= 2;
-        }
-        // `r` is initialized to `0`
-        while r > 0 {
-            data[r] = T::op(data[r * 2], data[r * 2 + 1]);
-            r /= 2;
         }
     }
 }

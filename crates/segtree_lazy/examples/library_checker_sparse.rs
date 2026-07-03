@@ -37,7 +37,7 @@ fn main() {
     type Query = (OpAdd<u64>, OpAdd<u32>);
 
     let mut lst = LazySegtree::<Update, Query, _>::from_iter(
-        |(a, b), (sum, n)| {
+        |&(a, b), &(sum, n)| {
             let v = (a as u64 * (sum % MOD) + b as u64 * n as u64) % MOD;
             (v, n)
         },
@@ -61,7 +61,7 @@ pub struct OpAffine;
 impl SemiGroup for OpAffine {
     type Set = (u32, u32);
 
-    fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set {
+    fn op(lhs: &Self::Set, rhs: &Self::Set) -> Self::Set {
         let (a, b) = (
             lhs.0 as u64 * rhs.0 as u64 % MOD,
             (lhs.1 as u64 * rhs.0 as u64 + rhs.1 as u64) % MOD,

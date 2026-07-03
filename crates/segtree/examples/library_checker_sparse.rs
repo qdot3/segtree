@@ -41,7 +41,7 @@ fn main() {
             let r = compressed_xoox[i][1] as usize;
             let x = query_oxxo[i].1 as u64;
 
-            let (a, b) = segtree.range_query(l..r);
+            let (a, b) = segtree.range_query(l..r).unwrap();
 
             output
                 .write(buf.format((a as u64 * x + b as u64) % MOD).as_bytes())
@@ -57,7 +57,7 @@ pub struct OpAffine;
 impl SemiGroup for OpAffine {
     type Set = (u32, u32);
 
-    fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set {
+    fn op(lhs: &Self::Set, rhs: &Self::Set) -> Self::Set {
         let a = lhs.0 as u64 * rhs.0 as u64 % MOD;
         let b = (lhs.1 as u64 * rhs.0 as u64 + rhs.1 as u64) % MOD;
         (a as u32, b as u32)

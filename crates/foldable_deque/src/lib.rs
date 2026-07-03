@@ -12,7 +12,7 @@ where
 
 impl<T> FoldableDeque<T>
 where
-    T: Monoid<Set: Copy>,
+    T: Monoid,
 {
     /// Creates an empty deque with space for at least `capacity` elements.
     ///
@@ -60,6 +60,33 @@ where
         self.tail.clear();
     }
 
+    /// Folds every element into an accumulator using [`T::op`](traits::SemiGroup::op),
+    /// returning the final result.
+    ///
+    /// # Time complexity
+    ///
+    /// O(1)
+    #[must_use]
+    pub fn fold(&self) -> T::Set {
+        let head = if let Some(first) = self.head.last() {
+            &first[1]
+        } else {
+            &T::id()
+        };
+        let tail = if let Some(last) = self.tail.last() {
+            &last[1]
+        } else {
+            &T::id()
+        };
+
+        T::op(head, tail)
+    }
+}
+
+impl<T> FoldableDeque<T>
+where
+    T: Monoid<Set: Clone>,
+{
     /// Appends an element to the front of the deque.
     ///
     /// # Time complexity
@@ -67,9 +94,9 @@ where
     /// O(1)
     pub fn push_front(&mut self, value: T::Set) {
         let folded = if let Some(first) = self.head.last() {
-            T::op(value, first[1])
+            T::op(&value, &first[1])
         } else {
-            value
+            value.clone()
         };
         self.head.push([value, folded]);
     }
@@ -81,9 +108,9 @@ where
     /// O(1)
     pub fn push_back(&mut self, value: T::Set) {
         let folded = if let Some(last) = self.tail.last() {
-            T::op(last[1], value)
+            T::op(&last[1], &value)
         } else {
-            value
+            value.clone()
         };
         self.tail.push([value, folded]);
     }
@@ -94,8 +121,9 @@ where
     ///
     /// O(1) amortized
     pub fn pop_front(&mut self) -> Option<T::Set> {
-        if let Some(first) = self.head.pop() {
-            return Some(first[0]);
+        if let Some([first, _]) = self.head.pop() {
+            // HACK: borrow checker
+            return Some(first);
         }
 
         self.head
@@ -104,19 +132,20 @@ where
         {
             let mut folded = T::id();
             for pair in &mut self.head {
-                folded = T::op(pair[0], folded);
-                pair[1] = folded;
+                folded = T::op(&pair[0], &folded);
+                pair[1] = folded.clone();
             }
         }
         {
             let mut folded = T::id();
             for pair in &mut self.tail {
-                folded = T::op(folded, pair[0]);
-                pair[1] = folded;
+                folded = T::op(&folded, &pair[0]);
+                pair[1] = folded.clone();
             }
         }
 
-        self.head.pop().map(|first| first[0])
+        // HACK: borrow checker
+        self.head.pop().map(|[first, _]| first)
     }
 
     /// Removes the last element and returns it, or None if the deque is empty.
@@ -125,8 +154,9 @@ where
     ///
     /// O(1) amortized
     pub fn pop_back(&mut self) -> Option<T::Set> {
-        if let Some(last) = self.tail.pop() {
-            return Some(last[0]);
+        if let Some([last, _]) = self.tail.pop() {
+            // HACK: borrow checker
+            return Some(last);
         }
 
         self.tail
@@ -135,40 +165,19 @@ where
         {
             let mut folded = T::id();
             for pair in &mut self.head {
-                folded = T::op(pair[0], folded);
-                pair[1] = folded;
+                folded = T::op(&pair[0], &folded);
+                pair[1] = folded.clone();
             }
         }
         {
             let mut folded = T::id();
             for pair in &mut self.tail {
-                folded = T::op(folded, pair[0]);
-                pair[1] = folded;
+                folded = T::op(&folded, &pair[0]);
+                pair[1] = folded.clone();
             }
         }
 
-        self.tail.pop().map(|last| last[0])
-    }
-
-    /// Folds every element into an accumulator using [`T::op`](traits::SemiGroup::op),
-    /// returning the final result.
-    ///
-    /// # Time complexity
-    ///
-    /// O(1)
-    #[must_use]
-    pub fn fold(&self) -> T::Set {
-        let head = if let Some(first) = self.head.last() {
-            first[1]
-        } else {
-            T::id()
-        };
-        let tail = if let Some(last) = self.tail.last() {
-            last[1]
-        } else {
-            T::id()
-        };
-
-        T::op(head, tail)
+        // HACK: borrow checker
+        self.tail.pop().map(|[last, _]| last)
     }
 }

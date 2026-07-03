@@ -2,7 +2,7 @@ pub trait SemiGroup {
     type Set;
 
     /// Performs associative binary operation.
-    fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set;
+    fn op(lhs: &Self::Set, rhs: &Self::Set) -> Self::Set;
 }
 
 pub trait Identity: SemiGroup {
@@ -10,7 +10,7 @@ pub trait Identity: SemiGroup {
 }
 
 pub trait Inverse: SemiGroup {
-    fn inv(x: Self::Set) -> Self::Set;
+    fn inv(x: &Self::Set) -> Self::Set;
 }
 
 pub trait Monoid: Identity {}
@@ -26,8 +26,8 @@ macro_rules! tuple_impl {
         impl<$( $t: SemiGroup ),*> SemiGroup for ($( $t ),*) {
             type Set = ($( <$t>::Set ),*);
 
-            fn op(lhs: Self::Set, rhs: Self::Set) -> Self::Set {
-                ($( <$t>::op(lhs.$i, rhs.$i) ),*)
+            fn op(lhs: &Self::Set, rhs:& Self::Set) -> Self::Set {
+                ($( <$t>::op(&lhs.$i, &rhs.$i) ),*)
             }
         }
 
@@ -38,8 +38,8 @@ macro_rules! tuple_impl {
         }
 
         impl<$( $t: Inverse ),*> Inverse for ($( $t ),*) {
-            fn inv(x: Self::Set) -> Self::Set {
-                ($( <$t>::inv(x.$i) ),*)
+            fn inv(x: &Self::Set) -> Self::Set {
+                ($( <$t>::inv(&x.$i) ),*)
             }
         }
 

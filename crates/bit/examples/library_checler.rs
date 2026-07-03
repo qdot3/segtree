@@ -13,7 +13,7 @@ fn main() {
     let n: usize = input.parse_next_token().unwrap();
     let q: usize = input.parse_next_token().unwrap();
 
-    let mut bit = BIT::<OpAdd<_>>::from(input.parse_next_token_vec::<u64>(n).unwrap());
+    let mut bit = BIT::<OpAdd<u64>>::from(input.parse_next_token_vec(n).unwrap());
     #[cfg(debug_assertions)]
     println!("{:?}", bit);
 
