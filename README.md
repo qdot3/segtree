@@ -2,6 +2,8 @@
 
 This repository contains many data structures supporting range updates and/or queries.
 
+See [docs](https://qdot3.github.io/segtree/segtree/index.html) for details.
+
 ## Usage
 
 Add this to your `Cargo.toml`:
