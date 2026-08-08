@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use traits::{Commutative, Idempotent, Identity, SemiGroup};
 
+#[derive(Debug, Clone, Copy)]
 pub struct OpMin<T>(PhantomData<T>);
 
 macro_rules! trait_impl_int {

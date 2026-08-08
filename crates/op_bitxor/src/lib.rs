@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use traits::{Commutative, Identity, Inverse, SemiGroup};
 
+#[derive(Debug, Clone, Copy)]
 pub struct OpBitXor<T>(PhantomData<T>);
 
 macro_rules! trait_impl {

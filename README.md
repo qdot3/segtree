@@ -21,10 +21,10 @@ foldable_deque = { git = "https://github.com/qdot3/segtree", version = "0.4.0" }
 segtree_traits = { git = "https://github.com/qdot3/segtree", package = "traits", version = "0.3.0" }
 
 op_add = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
-op_min = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
-op_max = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
+op_min = { git = "https://github.com/qdot3/segtree", version = "0.3.1" }
+op_max = { git = "https://github.com/qdot3/segtree", version = "0.3.1" }
 op_affine = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
-op_bitand = { git = "https://github.com/qdot3/segtree", version = "0.2.0" }
-op_bitxor = { git = "https://github.com/qdot3/segtree", version = "0.2.0" }
-op_bitor = { git = "https://github.com/qdot3/segtree", version = "0.2.0" }
+op_bitand = { git = "https://github.com/qdot3/segtree", version = "0.2.1" }
+op_bitxor = { git = "https://github.com/qdot3/segtree", version = "0.2.1" }
+op_bitor = { git = "https://github.com/qdot3/segtree", version = "0.2.1" }
 ```
