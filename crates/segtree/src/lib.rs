@@ -1,4 +1,4 @@
-use std::ops::RangeBounds;
+use std::{fmt::Debug, ops::RangeBounds};
 
 use traits::Monoid;
 
@@ -139,8 +139,11 @@ where
         }
     }
 
-    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
-    /// Performs an operation similar to [`slice::partition_point`].
+    /// Find `r` which satisfies:
+    /// ```text
+    /// ∀i <= r, pred(self.range_query(i..r)) = true
+    /// ∀i >  r, pred(self.range_query(i..r)) = false
+    /// ```
     ///
     /// # Panics
     ///
@@ -186,8 +189,11 @@ where
         (acc, l.wrapping_sub(self.offset).min(self.len))
     }
 
-    #[deprecated = "this api is not tested and may contains bugs. please tell me a problem to verify this."]
-    /// Performs an operation similar to [`slice::partition_point`].
+    /// Find `l` which satisfies:
+    /// ```text
+    /// ∀i >= l, pred(self.range_query(i..r)) = true
+    /// ∀i <  l, pred(self.range_query(i..r)) = false
+    /// ```
     ///
     /// # Panics
     ///
@@ -200,13 +206,19 @@ where
     pub fn left_partition<P>(&self, mut r: usize, mut pred: P) -> (T::Set, usize)
     where
         P: FnMut(&T::Set) -> bool,
+        T::Set: Debug,
     {
         assert!(r <= self.len, "index out of bounds");
         r += self.offset;
         r >>= r.trailing_zeros();
 
         let mut acc = T::id();
-        while !r.is_power_of_two() {
+        loop {
+            if r.is_power_of_two() {
+                return (acc, 0);
+            }
+
+            r >>= r.trailing_zeros();
             r -= 1;
 
             let v = T::op(&acc, &self.data[r]);
@@ -214,11 +226,8 @@ where
                 break;
             }
             acc = v;
-
-            r >>= r.trailing_zeros();
         }
 
-        r = (r - 1).max(1);
         while r < self.data.len() / 2 {
             r = r * 2 + 1;
 
@@ -229,7 +238,7 @@ where
             }
         }
 
-        (acc, r + 1 - self.offset)
+        (acc, r - self.offset + 1)
     }
 }
 
@@ -286,6 +295,70 @@ where
             data: data.into_boxed_slice(),
             offset,
             len,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use op_add::OpAdd;
+    use rand::{random, random_iter};
+
+    use crate::Segtree;
+
+    #[test]
+    fn right_partition() {
+        let data: Vec<_> = random_iter::<u32>()
+            .map(|v| v >> 16)
+            .take(1 << 10)
+            .collect();
+        let seg = Segtree::<OpAdd<u32>>::from(data);
+
+        for l in 0..seg.len() {
+            let sum = random::<u32>();
+
+            let u = seg.right_partition(l, |v| *v < sum);
+
+            let v = {
+                let mut r = l;
+                while r < seg.len() && seg.range_query(l..r).unwrap_or(0) < sum {
+                    r += 1;
+                }
+                if !(seg.range_query(l..r).unwrap_or(0) < sum) {
+                    r = l.max(r.saturating_sub(1))
+                }
+                (seg.range_query(l..r).unwrap_or(0), r)
+            };
+
+            assert_eq!(u, v, "{l} {sum}")
+        }
+    }
+
+    #[test]
+    fn left_partition() {
+        let data: Vec<_> = random_iter::<u32>()
+            .map(|v| v >> 16)
+            .take(1 << 10)
+            .collect();
+        let seg = Segtree::<OpAdd<u32>>::from(data);
+
+        for r in 0..seg.len() {
+            let sum = random::<u32>();
+
+            let u = seg.left_partition(r, |v| *v < sum);
+
+            let v = {
+                let mut l = r;
+                while l > 0 && seg.range_query(l..r).unwrap_or(0) < sum {
+                    l -= 1;
+                }
+                if !(seg.range_query(l..r).unwrap_or(0) < sum) {
+                    l = r.min(l + 1)
+                }
+                (seg.range_query(l..r).unwrap_or(0), l)
+            };
+
+            assert_eq!(u, v, "{r} {sum}")
         }
     }
 }

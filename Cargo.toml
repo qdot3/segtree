@@ -20,7 +20,7 @@ members = [
     "crates/op_affine", "crates/op_bitand", "crates/op_bitor", "crates/op_bitxor",
     "crates/op_max",
     "crates/op_min",
-    "crates/segtree",
+    "crates/segtree", "crates/segtree_beats",
     "crates/segtree_dual",
     "crates/segtree_lazy",
     "crates/sparse_table",
