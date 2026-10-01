@@ -299,6 +299,8 @@ where
     }
 }
 
+/// 検証用問題
+/// <https://atcoder.jp/contests/joig2026final/tasks/joig2026final_b>
 #[cfg(test)]
 mod tests {
     use op_add::OpAdd;
