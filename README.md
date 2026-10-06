@@ -13,7 +13,7 @@ Add this to your `Cargo.toml`:
 segtree = { git = "https://github.com/qdot3/segtree", version = "0.4.1" }
 segtree_dual = { git = "https://github.com/qdot3/segtree", version = "0.4.0" }
 segtree_lazy = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
-bit = { git = "https://github.com/qdot3/segtree", version = "0.3.0" }
+bit = { git = "https://github.com/qdot3/segtree", version = "0.3.1" }
 sparse_table = { git = "https://github.com/qdot3/segtree", version = "0.2.0" }
 foldable_queue = { git = "https://github.com/qdot3/segtree", version = "0.4.0" }
 foldable_deque = { git = "https://github.com/qdot3/segtree", version = "0.4.0" }
