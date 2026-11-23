@@ -1,7 +1,7 @@
 use traits::{Commutative, Group, Monoid};
 
 /// Binary indexed tree (BIT).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BIT<T>
 where
     T: Commutative + Monoid,
@@ -13,9 +13,10 @@ impl<T> BIT<T>
 where
     T: Commutative + Monoid,
 {
-    /// Constructs new instance initialized with the [`identity element`].
+    /// Creates new instance initialized with the [`identity element`].
     ///
     /// [`identity element`]: traits::Identity::id
+    #[must_use]
     pub fn new(n: usize) -> Self
     where
         T::Set: Clone,
@@ -25,6 +26,39 @@ where
         }
     }
 
+    /// Appends an element to the back of the collection.
+    ///
+    /// # Time complexity
+    ///
+    /// O(log N)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bit::BIT;
+    /// # use op_add::OpAdd;
+    ///
+    /// let mut bit = BIT::<OpAdd<usize>>::new(0);
+    /// let mut sum = 0;
+    /// for i in 1..=1_000 {
+    ///     sum += i;
+    ///     bit.push(i);
+    ///
+    ///     assert_eq!(bit.prefix_query(i), sum)
+    /// }
+    /// ```
+    pub fn push(&mut self, mut value: T::Set) {
+        let i = self.data.len();
+        let mut b = i + 1 - (i & (i + 1));
+        b >>= 1;
+        while b > 0 {
+            value = T::op(&value, &self.data[i - b]);
+            b >>= 1;
+        }
+
+        self.data.push(value);
+    }
+
     /// Reduces the first `n` elements using [`T::op`].
     ///
     /// [`T::op`]: traits::SemiGroup::op
@@ -32,6 +66,22 @@ where
     /// # Time complexity
     ///
     /// O(log N)
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bit::BIT;
+    /// # use op_add::OpAdd;
+    ///
+    /// let bit = BIT::<OpAdd<usize>>::from(Vec::from_iter(1..=1_000));
+    /// let mut sum = 0;
+    /// for i in 0..=1_000 {
+    ///     sum += i;
+    ///
+    ///     assert_eq!(bit.prefix_query(i), sum)
+    /// }
+    /// ```
+    #[must_use]
     pub fn prefix_query(&self, mut n: usize) -> T::Set {
         let mut result = T::id();
         while n > 0 {
@@ -69,6 +119,7 @@ where
     /// # Time complexity
     ///
     /// O(log N)
+    #[must_use]
     pub fn partition_point<P>(&self, mut pred: P) -> (usize, T::Set)
     where
         P: FnMut(&T::Set) -> bool,
@@ -102,6 +153,7 @@ where
     /// # Time complexity
     ///
     /// O(log N)
+    #[must_use]
     pub fn get(&self, i: usize) -> T::Set {
         let acc_r = &self.data[i];
 
@@ -134,5 +186,17 @@ where
         }
 
         Self { data: value }
+    }
+}
+
+impl<T> FromIterator<T::Set> for BIT<T>
+where
+    T: Commutative + Monoid,
+{
+    /// # Time complexity
+    ///
+    /// O(N)
+    fn from_iter<I: IntoIterator<Item = T::Set>>(iter: I) -> Self {
+        Self::from(Vec::from_iter(iter))
     }
 }

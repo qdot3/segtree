@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "bit"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "from_bytes",
  "op_add",
